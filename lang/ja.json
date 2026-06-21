@@ -49,7 +49,7 @@
     "dialogs": {
       "setup": {
         "title": "Nik's Zoom / Pan Options - セットアップ",
-        "content": "<p>マウスとタッチパッドのどちらを使用していますか？</p>",
+        "content": "<p>マウスとタッチパッドのどちらを使用していますか？<br>Nik's Zoom & Pan Options の設定がそれに応じて最適化されます。</p>",
         "button_mouse": "マウス",
         "button_touchpad": "タッチパッド"
       }

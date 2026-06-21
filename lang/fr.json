@@ -49,7 +49,7 @@
     "dialogs": {
       "setup": {
         "title": "Nik's Zoom / Pan Options - Configuration",
-        "content": "<p>Utilisez-vous une souris ou un pavé tactile ?</p>",
+        "content": "<p>Utilisez-vous une souris ou un pavé tactile ?<br>Les paramètres de Nik's Zoom & Pan Options seront optimisés en conséquence.</p>",
         "button_mouse": "Souris",
         "button_touchpad": "Pavé tactile"
       }
