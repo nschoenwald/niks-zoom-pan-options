@@ -1,20 +1,17 @@
 const MODULE_ID = 'niks-zoom-pan-options'
 
 let isConflictingWithLockView = false
+let _savedOnMouseDown = null
 
-function getSetting (settingName) {
+function getSetting(settingName) {
   return game.settings.get(MODULE_ID, settingName)
 }
 
-function localizeSetting (scope, str) {
+function localizeSetting(scope, str) {
   return game.i18n.localize(MODULE_ID + '.settings.' + scope + '.' + str)
 }
 
-function localizeUi (scope, str) {
-  return game.i18n.localize(MODULE_ID + '.ui.' + scope + '.' + str)
-}
-
-function localizeKeybinding (scope, str) {
+function localizeKeybinding(scope, str) {
   return game.i18n.localize(MODULE_ID + '.keybindings.' + scope + '.' + str)
 }
 
@@ -35,12 +32,18 @@ const updateMinMaxZoomLimits = () => {
   const maxZoom = Math.max(Math.min(innerWidth / grid.sizeX, innerHeight / grid.sizeY) / factor, canvas.scene.initial.scale)
   CONFIG.Canvas.minZoom = minZoom
   CONFIG.Canvas.maxZoom = maxZoom
-  canvas.dimensions.scale.min = minZoom
-  canvas.dimensions.scale.max = maxZoom
+  // In V14, canvas.dimensions is frozen/readonly, so we wrap in try-catch
+  // In V13, we still need to set these directly for the limits to take effect
+  try {
+    canvas.dimensions.scale.min = minZoom
+    canvas.dimensions.scale.max = maxZoom
+  } catch (e) {
+    // V14: dimensions are frozen, CONFIG.Canvas.minZoom/maxZoom is sufficient
+  }
 }
 
 class MouseManager_ZoomPanOptions_Override {
-  constructor () {
+  constructor() {
     if (game.mouse) throw new Error('You may not re-construct the singleton MouseManager instance.')
   }
 
@@ -61,7 +64,7 @@ class MouseManager_ZoomPanOptions_Override {
   /* -------------------------------------------- */
 
   /** ZPO:  utility function */
-  debounceRotationByRateLimit () {
+  debounceRotationByRateLimit() {
     const t = Date.now()
     if ((t - this.#wheelTime) < MouseManager_ZoomPanOptions_Override.MOUSE_WHEEL_RATE_LIMIT)
       return false
@@ -73,7 +76,7 @@ class MouseManager_ZoomPanOptions_Override {
    * Begin listening to mouse events.
    * @internal
    */
-  _activateListeners () {
+  _activateListeners() {
     window.addEventListener('wheel', this.#onWheel.bind(this), { passive: false })
   }
 
@@ -83,7 +86,7 @@ class MouseManager_ZoomPanOptions_Override {
    * Master mouse-wheel event handler
    * @param {WheelEvent} event    The mouse wheel event
    */
-  #onWheel (event) {
+  #onWheel(event) {
     // Prevent zooming the entire browser window
     // ZPO:  ctrl and meta should work the same way
     if (event.ctrlKey || event.metaKey) event.preventDefault()
@@ -99,12 +102,10 @@ class MouseManager_ZoomPanOptions_Override {
     //  dy = event.delta = event.deltaX
     //}
     //if (dy === 0) return
-    const deltaY = event.wheelDelta !== undefined ? -event.wheelDelta
-      // wheelDelta is undefined in firefox
-      : event.deltaY
+    const deltaY = event.deltaY
     const deltaX = event.deltaX
     // Foundry internally invents a field, `event.delta`, so we must define it (same way)
-    event.delta = deltaY === 0 ? deltaX : event.deltaY
+    event.delta = deltaY === 0 ? deltaX : deltaY
 
     // Take no actions if the canvas is not hovered
     if (!canvas.ready) return
@@ -115,31 +116,23 @@ class MouseManager_ZoomPanOptions_Override {
     // Select scrolling mode
     const mode = getSetting('pan-zoom-mode')
 
-    // Case 1 - active Ruler
+    // Case 1 - active ruler
     const ruler = canvas.controls.ruler
     if (ruler.active && (isCtrl || isShift)) return ruler._onMouseWheel(event)
 
-    // Case 2 - Token is dragged
-    const draggedToken = canvas.tokens._draggedToken
-    if (draggedToken && (isCtrl || isShift)) return draggedToken._onDragMouseWheel(event)
+    // Case 2 - active layer
+    // ZPO: this is where the game rotates stuff.  it doesn't support Touchpad or Alternative.  so for those two, we will
+    // simply skip and never go through with it -- instead relying on our own rotation code (possibly outdated...)
+    if (mode === 'Mouse')
+      if (isCtrl || isShift) return canvas.activeLayer._onMouseWheel(event)
 
-    // Case 3 - rotate placeable objects
-    // ZPO:  rewritten better below
-    //const layer = canvas.activeLayer
-    //if (layer?.options?.rotatableObjects && (isCtrl || isShift)) {
-    //  const hasTarget = layer.options?.controllableObjects ? layer.controlled.length : !!layer.hover
-    //  if (hasTarget) {
-    //    const t = Date.now()
-    //    if ((t - this.#wheelTime) < this.constructor.MOUSE_WHEEL_RATE_LIMIT) return
-    //    this.#wheelTime = t
-    //    return layer._onMouseWheel(event)
-    //  }
-    //}
+    // Case 2.1 - active layer handling (e.g. placeable rotation) for non-standard pan/zoom mode
     const layer = canvas.activeLayer
     const layerPossiblyHasRotatableObjects = layer?.options?.rotatableObjects
     const currentlyHasRotationTarget = layer?.options?.controllableObjects ? layer?.controlled?.length : !!layer?.hover
     if (layerPossiblyHasRotatableObjects && currentlyHasRotationTarget) {
       if (mode === 'Mouse' && (isCtrl || isShift)) {
+        // this should never happen, since it's caught earlier in Case 2. kept here for completion
         return this.debounceRotationByRateLimit() && checkZoomLock() && layer._onMouseWheel(event)
       }
       if (mode === 'Touchpad' && isShift) {
@@ -158,7 +151,7 @@ class MouseManager_ZoomPanOptions_Override {
 
     // ZPO:  detailed override/rewrite for zooming and panning
 
-    // Case 4.2 - zoom the canvas
+    // Case 3 - zoom the canvas
     // (written to be readable)
     if (
       mode === 'Mouse'
@@ -167,28 +160,29 @@ class MouseManager_ZoomPanOptions_Override {
     ) {
       return zoom(event)
     }
-    // Case 4.2.2 - zoom the canvas if the user is doing a pinch gesture (which sends a wheel event with ctrlKey=true)
+    // Case 3.1 - zoom the canvas if the user is doing a pinch gesture (which sends a wheel event with ctrlKey=true)
     if (mode === 'Touchpad' && event.ctrlKey) {
       return zoom(event)
     }
 
-    // Cast 4.3 - pan the canvas horizontally (shift+scroll)
+    // Case 4 - pan the canvas horizontally (shift+scroll)
     if (mode === 'Alternative' && isShift) {
       // noinspection JSSuspiciousNameCombination
       return panWithMultiplier({
         deltaX: deltaY, // (this is intentionally passing Y for X)
+        deltaY: 0,
       })
     }
 
-    // Case 4.4 - pan the canvas in the direction of the mouse/touchpad event
+    // Case 5 - pan the canvas in the direction of the mouse/touchpad event
     panWithMultiplier(event)
   }
 }
 
 /**
- * Will zoom around cursor, and based on delta.
+ * Will zoom based on delta.
  */
-function zoom (event) {
+function zoom(event) {
   if (!checkZoomLock()) return
   if (event.deltaY === 0) return
 
@@ -202,37 +196,25 @@ function zoom (event) {
   const speedBasedZoom = 1.05 ** (-delta * 0.01 * multiplier)
   const scaleChangeRatio = multiplier === 0 ? fivePercentZoom : speedBasedZoom
 
-  // Acquire the cursor position transformed to Canvas coordinates
-  const canvasEventPos = canvas.stage.worldTransform.applyInverse({ x: event.clientX, y: event.clientY })
-  const canvasPivotPos = canvas.stage.pivot
-  const deltaX = canvasEventPos.x - canvasPivotPos.x
-  const deltaY = canvasEventPos.y - canvasPivotPos.y
-  // scaledDelta will be about 5% of the delta vector between center-screen and cursor, in world coords
-  const scaledDeltaX = deltaX * (scaleChangeRatio - 1) / scaleChangeRatio
-  const scaledDeltaY = deltaY * (scaleChangeRatio - 1) / scaleChangeRatio
-  // new x and y will be close to the previous center screen, but pushed a bit towards cursor;  just enough to keep the
-  // cursor in the exact same world coords.
-  const x = canvasPivotPos.x + scaledDeltaX
-  const y = canvasPivotPos.y + scaledDeltaY
   const scale = canvas.stage.scale.x // scale x and scale y are the same
   const targetScale = scaleChangeRatio * scale
-  const max = canvas.dimensions.scale.max
-  const min = canvas.dimensions.scale.min
+  // Prefer canvas.dimensions values (set on V13), fall back to CONFIG.Canvas (set on both V13/V14)
+  const max = canvas.dimensions?.scale?.max ?? CONFIG.Canvas.maxZoom
+  const min = canvas.dimensions?.scale?.min ?? CONFIG.Canvas.minZoom
   if (targetScale > max || targetScale < min) {
     if (scale === max || scale === min) {
-      console.log("Nik's Zoom / Pan Options |", `scale is at limit (${scale})`)
+      console.debug("Nik's Zoom / Pan Options |", `scale is at limit (${scale})`)
       return
     }
-    console.log("Nik's Zoom / Pan Options |", `scale (${targetScale}) would exceed limit, bounding to interval [${min}, ${max}).`)
-    // (we do not want to change x and y when min/max zoom is reached, to avoid unintended panning)
-    canvas.pan({ x, y, scale: Math.clamp(targetScale, min, max) })
+    console.debug("Nik's Zoom / Pan Options |", `scale (${targetScale}) would exceed limit, bounding to interval [${min}, ${max}].`)
+    canvas.pan({ x: canvas.stage.pivot.x, y: canvas.stage.pivot.y, scale: Math.clamp(targetScale, min, max) })
     return
   }
   /** note:  minZoom and maxZoom will be applied to canvas.dimensions.scale.max (etc) and then used in _constrainView */
-  canvas.pan({ x, y, scale: targetScale })
+  canvas.pan({ x: canvas.stage.pivot.x, y: canvas.stage.pivot.y, scale: targetScale })
 }
 
-function panWithMultiplier (event) {
+function panWithMultiplier(event) {
   if (!checkPanLock()) return
   const multiplier = (1 / canvas.stage.scale.x) * getSetting('pan-speed-multiplier')
   const invertVerticalScroll = getSetting('invert-vertical-scroll') ? -1 : 1
@@ -241,22 +223,35 @@ function panWithMultiplier (event) {
   canvas.pan({ x, y })
 }
 
-function disableMiddleMouseScrollIfMiddleMousePanIsActive (isActive) {
+function disableMiddleMouseScrollIfMiddleMousePanIsActive(isActive) {
   if (isActive) {
     // this will prevent middle-click from showing the scroll icon
-    document.body.onmousedown__disabled = document.body.onmousedown
+    _savedOnMouseDown = document.body.onmousedown
     document.body.onmousedown = function (e) { if (e.button === 1) return false }
   } else {
-    document.body.onmousedown = document.body.onmousedown__disabled
+    document.body.onmousedown = _savedOnMouseDown
+    _savedOnMouseDown = null
   }
 }
 
 const disableBrowserGesturesIfTouchpad = (panZoomMode) => {
   if (panZoomMode === 'Touchpad') {
     // disable browser back/forward gestures
-    document.getElementsByTagName('BODY')[0].style.overscrollBehaviorX = 'none'
-  } else if (document.getElementsByTagName('BODY')[0].style.overscrollBehaviorX === 'none') {
-    document.getElementsByTagName('BODY')[0].style.overscrollBehaviorX = ''
+    document.body.style.overscrollBehaviorX = 'none'
+  } else if (document.body.style.overscrollBehaviorX === 'none') {
+    document.body.style.overscrollBehaviorX = ''
+  }
+}
+
+const createMimDebug = (mim) => (action, event, outcome = mim.handlerOutcomes.ACCEPTED) => {
+  if (CONFIG.debug.mouseInteraction) {
+    const name = mim.object.constructor.name
+    const targetName = event.target?.constructor.name
+    const { eventPhase, type, button } = event
+    const state = Object.keys(mim.states)[mim.state.toString()]
+    let msg = `${name} | ${action} | state:${state} | target:${targetName} | phase:${eventPhase} | type:${type} | `
+      + `btn:${button} | skipped:${outcome <= -2} | allowed:${outcome > -1} | handled:${outcome > 1}`
+    console.debug(msg)
   }
 }
 
@@ -394,17 +389,7 @@ const handleMouseDown_forMiddleClickDrag = (mouseDownEvent) => {
     mim.interactionData.screenOrigin = new PIXI.Point(event.global.x, event.global.y)
   }
 
-  const mim_debug = (action, event, outcome = mim.handlerOutcomes.ACCEPTED) => {
-    if (CONFIG.debug.mouseInteraction) {
-      const name = mim.object.constructor.name
-      const targetName = event.target?.constructor.name
-      const { eventPhase, type, button } = event
-      const state = Object.keys(mim.states)[mim.state.toString()]
-      let msg = `${name} | ${action} | state:${state} | target:${targetName} | phase:${eventPhase} | type:${type} | `
-        + `btn:${button} | skipped:${outcome <= -2} | allowed:${outcome > -1} | handled:${outcome > 1}`
-      console.debug(msg)
-    }
-  }
+  const mim_debug = createMimDebug(mim)
 
   mim_handleRightDown(mouseDownEvent)
   // `return false` will call stopPropagation and preventDefault
@@ -473,17 +458,7 @@ const handleMouseUp_forMiddleClickDrag = (mouseUpEvent) => {
     event.stopPropagation()
   }
 
-  const mim_debug = (action, event, outcome = mim.handlerOutcomes.ACCEPTED) => {
-    if (CONFIG.debug.mouseInteraction) {
-      const name = mim.object.constructor.name
-      const targetName = event.target?.constructor.name
-      const { eventPhase, type, button } = event
-      const state = Object.keys(mim.states)[mim.state.toString()]
-      let msg = `${name} | ${action} | state:${state} | target:${targetName} | phase:${eventPhase} | type:${type} | `
-        + `btn:${button} | skipped:${outcome <= -2} | allowed:${outcome > -1} | handled:${outcome > 1}`
-      console.debug(msg)
-    }
-  }
+  const mim_debug = createMimDebug(mim)
 
   mim_handlePointerUp(mouseUpEvent)
   // `return false` will call stopPropagation and preventDefault
@@ -511,7 +486,7 @@ const checkPanLock = () => {
   return true
 }
 
-function _onDragCanvasPan_override (event) {
+function _onDragCanvasPan_override(event) {
   if (!checkPanLock()) {
     return
   }
@@ -542,7 +517,7 @@ function _onDragCanvasPan_override (event) {
 
 const avoidLockViewIncompatibility = () => {
   Hooks.on('libWrapper.ConflictDetected', (p1, p2, target, frozenNames) => {
-    if ((p1 === MODULE_ID && p2 === 'LockView') || p2 === MODULE_ID && p1 === 'LockView') {
+    if ((p1 === MODULE_ID && p2 === 'LockView') || (p2 === MODULE_ID && p1 === 'LockView')) {
       if (frozenNames.includes('foundry.canvas.Canvas.prototype._onDragCanvasPan')) {
         if (!game.user.isGM) {
           if (!getSetting('disable-lock-view-compatibility-fix')) {
@@ -554,6 +529,12 @@ const avoidLockViewIncompatibility = () => {
   })
   game.settings.register(MODULE_ID, 'disable-lock-view-compatibility-fix', {
     name: 'hidden setting in case I fuck up my attempt to fix that bug',
+    scope: 'client',
+    config: false,
+    default: false,
+    type: Boolean,
+  })
+  game.settings.register(MODULE_ID, 'first-time-setup-done', {
     scope: 'client',
     config: false,
     default: false,
@@ -582,16 +563,9 @@ Hooks.on('init', function () {
     hint: localizeSetting('middle-mouse-pan', 'hint'),
     scope: 'client',
     config: true,
-    default: false,
+    default: true,
     type: Boolean,
     onChange: disableMiddleMouseScrollIfMiddleMousePanIsActive,
-  })
-  game.settings.register(MODULE_ID, 'min-max-zoom-override', {
-    name: 'OLD min-max-zoom-override',
-    scope: 'client',
-    config: false,
-    type: Number,
-    default: null,
   })
   game.settings.register(MODULE_ID, 'max-zoom-override', {
     name: localizeSetting('max-zoom-override', 'name'),
@@ -625,7 +599,7 @@ Hooks.on('init', function () {
   if (game.settings.get(MODULE_ID, 'min-zoom-override') !== null) {
     console.log("Nik's Zoom / Pan Options |", 'migrating min-zoom-override to min-zoom-override-v2')
     console.log("Nik's Zoom / Pan Options |",
-      `old setting value was: ${game.settings.get(MODULE_ID, 'min-zoom-override')}}`)
+      `old setting value was: ${game.settings.get(MODULE_ID, 'min-zoom-override')}`)
     game.settings.set(MODULE_ID, 'min-zoom-override-v2', game.settings.get(MODULE_ID, 'min-zoom-override') * 3)
     game.settings.set(MODULE_ID, 'min-zoom-override', null)
   }
@@ -719,4 +693,31 @@ Hooks.on('canvasReady', () => {
   canvas.stage.on('mousedown', handleMouseDown_forMiddleClickDrag)
   canvas.stage.on('mouseup', handleMouseUp_forMiddleClickDrag)  // technically this isn't necessary, based on testing
   updateMinMaxZoomLimits()
+})
+
+Hooks.once('ready', () => {
+  if (!game.settings.get(MODULE_ID, 'first-time-setup-done')) {
+    new Dialog({
+      title: game.i18n.localize(`${MODULE_ID}.dialogs.setup.title`),
+      content: game.i18n.localize(`${MODULE_ID}.dialogs.setup.content`),
+      buttons: {
+        mouse: {
+          icon: '<i class="fas fa-mouse"></i>',
+          label: game.i18n.localize(`${MODULE_ID}.dialogs.setup.button_mouse`),
+          callback: () => {
+            game.settings.set(MODULE_ID, 'first-time-setup-done', true)
+          }
+        },
+        touchpad: {
+          icon: '<i class="fas fa-hand-pointer"></i>',
+          label: game.i18n.localize(`${MODULE_ID}.dialogs.setup.button_touchpad`),
+          callback: () => {
+            game.settings.set(MODULE_ID, 'pan-zoom-mode', 'Touchpad')
+            game.settings.set(MODULE_ID, 'first-time-setup-done', true)
+          }
+        }
+      },
+      default: "mouse"
+    }).render(true)
+  }
 })

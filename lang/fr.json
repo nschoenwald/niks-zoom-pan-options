@@ -41,9 +41,17 @@
         "name": "Basculer entre la souris et le mode alternatif"
       },
       "notifications": {
-        "Mouse": "Options de zoom/déplacement : mode souris activé.",
-        "Touchpad": "Options de zoom/déplacement : mode pavé tactile activé.",
-        "Alternative": "Options de zoom/déplacement : mode alternatif activé."
+        "Mouse": "Nik's Zoom / Pan Options : mode souris activé.",
+        "Touchpad": "Nik's Zoom / Pan Options : mode pavé tactile activé.",
+        "Alternative": "Nik's Zoom / Pan Options : mode alternatif activé."
+      }
+    },
+    "dialogs": {
+      "setup": {
+        "title": "Nik's Zoom / Pan Options - Configuration",
+        "content": "<p>Utilisez-vous une souris ou un pavé tactile ?</p>",
+        "button_mouse": "Souris",
+        "button_touchpad": "Pavé tactile"
       }
     }
   }

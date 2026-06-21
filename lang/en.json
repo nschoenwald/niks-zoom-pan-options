@@ -45,6 +45,14 @@
         "Touchpad": "Nik's Zoom / Pan Options: Touchpad mode enabled.",
         "Alternative": "Nik's Zoom / Pan Options: Alternative mode enabled."
       }
+    },
+    "dialogs": {
+      "setup": {
+        "title": "Nik's Zoom / Pan Options - Setup",
+        "content": "<p>Are you using a Mouse or a Touchpad?</p>",
+        "button_mouse": "Mouse",
+        "button_touchpad": "Touchpad"
+      }
     }
   }
 }

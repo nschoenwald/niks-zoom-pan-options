@@ -45,6 +45,14 @@
         "Touchpad": "Nik's Zoom / Pan Options: タッチパッドモードが有効になりました。",
         "Alternative": "Nik's Zoom / Pan Options: 代替モードが有効になりました。"
       }
+    },
+    "dialogs": {
+      "setup": {
+        "title": "Nik's Zoom / Pan Options - セットアップ",
+        "content": "<p>マウスとタッチパッドのどちらを使用していますか？</p>",
+        "button_mouse": "マウス",
+        "button_touchpad": "タッチパッド"
+      }
     }
   }
 }

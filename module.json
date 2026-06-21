@@ -1,11 +1,11 @@
 {
   "id": "niks-zoom-pan-options",
   "title": "Nik's Zoom / Pan Options",
-  "description": "Adds cursor-based zoom, touchpad/scrollwheel zoom/pan support, and other options.",
-  "version": "2.1.1",
+  "description": "Adds touchpad/scrollwheel zoom/pan support, and other options.",
+  "version": "14.3",
   "compatibility": {
     "minimum": "13",
-    "verified": "13"
+    "verified": "14"
   },
   "esmodules": [
     "scripts/zoom-pan-options.js"
@@ -31,12 +31,8 @@
     }
   ],
   "url": "https://github.com/nschoenwald/niks-zoom-pan-options",
-  "manifest": "https://github.com/nschoenwald/niks-zoom-pan-options/raw/master/module.json",
-  "download": "https://github.com/nschoenwald/niks-zoom-pan-options/archive/master.zip",
-  "readme": "https://github.com/nschoenwald/niks-zoom-pan-options/blob/master/Readme.md",
-  "changelog": "https://github.com/nschoenwald/niks-zoom-pan-options/blob/master/Changelog.md",
-  "license": "https://github.com/nschoenwald/niks-zoom-pan-options/blob/master/License.txt",
-  "bugs": "https://github.com/nschoenwald/niks-zoom-pan-options/issues",
+  "manifest": "https://github.com/nschoenwald/niks-zoom-pan-options/releases/latest/download/module.json",
+  "download": "https://github.com/nschoenwald/niks-zoom-pan-options/releases/latest/download/module.zip",
   "relationships": {
     "requires": [
       {
