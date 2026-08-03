@@ -629,6 +629,25 @@ Hooks.on('init', function () {
     type: Number,
   })
 
+  game.settings.register(MODULE_ID, 'touchpad-defaults-updated', {
+    scope: 'client',
+    config: false,
+    default: false,
+    type: Boolean,
+  })
+
+  if (!game.settings.get(MODULE_ID, 'touchpad-defaults-updated')) {
+    const currentMode = game.settings.get(MODULE_ID, 'pan-zoom-mode')
+    const currentZoom = game.settings.get(MODULE_ID, 'zoom-speed-multiplier')
+    const currentPan = game.settings.get(MODULE_ID, 'pan-speed-multiplier')
+
+    if (currentMode === 'Touchpad' && (currentZoom !== 10 || currentPan !== 1)) {
+      game.settings.set(MODULE_ID, 'zoom-speed-multiplier', 10)
+      game.settings.set(MODULE_ID, 'pan-speed-multiplier', 1)
+    }
+    game.settings.set(MODULE_ID, 'touchpad-defaults-updated', true)
+  }
+
   // Register Keybindings
 
   game.keybindings.register(MODULE_ID, 'toggleTouchpadMode', {
@@ -713,6 +732,8 @@ Hooks.once('ready', () => {
           label: game.i18n.localize(`${MODULE_ID}.dialogs.setup.button_touchpad`),
           callback: () => {
             game.settings.set(MODULE_ID, 'pan-zoom-mode', 'Touchpad')
+            game.settings.set(MODULE_ID, 'zoom-speed-multiplier', 10)
+            game.settings.set(MODULE_ID, 'pan-speed-multiplier', 1)
             game.settings.set(MODULE_ID, 'first-time-setup-done', true)
           }
         }
