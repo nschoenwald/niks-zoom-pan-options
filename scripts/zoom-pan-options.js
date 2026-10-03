@@ -126,7 +126,15 @@ class MouseManager_ZoomPanOptions_Override {
     if (mode === 'Mouse')
       if (isCtrl || isShift) return canvas.activeLayer._onMouseWheel(event)
 
-    // Case 2.1 - active layer handling (e.g. placeable rotation) for non-standard pan/zoom mode
+    // Case 2.1 - active template placement rotation in Touchpad mode
+    if (mode === 'Touchpad' && isShift && canvas.regions?._placementContext) {
+      return this.debounceRotationByRateLimit() && checkZoomLock() && canvas.regions._onMouseWheel({
+        delta: event.delta,
+        shiftKey: isShift && !isCtrl,
+      })
+    }
+
+    // Case 2.2 - active layer handling (e.g. placeable rotation) for non-standard pan/zoom mode
     const layer = canvas.activeLayer
     const layerPossiblyHasRotatableObjects = layer?.options?.rotatableObjects
     const currentlyHasRotationTarget = layer?.options?.controllableObjects ? layer?.controlled?.length : !!layer?.hover
@@ -137,13 +145,13 @@ class MouseManager_ZoomPanOptions_Override {
       }
       if (mode === 'Touchpad' && isShift) {
         return this.debounceRotationByRateLimit() && checkZoomLock() && layer._onMouseWheel({
-          delta: deltaY,
+          delta: event.delta,
           shiftKey: isShift && !isCtrl,
         })
       }
       if (mode === 'Alternative' && isAlt && (isCtrl || isShift)) {
         return this.debounceRotationByRateLimit() && checkZoomLock() && layer._onMouseWheel({
-          delta: deltaY,
+          delta: event.delta,
           shiftKey: isShift,
         })
       }
@@ -184,10 +192,10 @@ class MouseManager_ZoomPanOptions_Override {
  */
 function zoom(event) {
   if (!checkZoomLock()) return
-  if (event.deltaY === 0) return
+  const delta = event?.delta ?? (event?.deltaY === 0 ? event?.deltaX : event?.deltaY)
+  if (!delta) return
 
   const multiplier = getSetting('zoom-speed-multiplier')
-  const delta = event.deltaY
 
   // scaleChangeRatio was originally called "dz" but that's not really descriptive.  it's usually 1.05 or 0.95.
   // default foundry behavior is 1.05 and 0.95, but I actually change it to 1.05 and 0.95238 (*105% and /105%).
@@ -686,7 +694,8 @@ Hooks.once('setup', function () {
     MODULE_ID,
     'foundry.canvas.Canvas.prototype._onMouseWheel',
     (event) => {
-      // Do nothing, wheel events are handled by our custom MouseManager
+      // Delegate to custom zoom handler if called externally (e.g. from template hud or other tools)
+      zoom(event)
     },
     'OVERRIDE',
   )
