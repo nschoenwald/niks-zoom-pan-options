@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.4.0] - 2026-10-04
+### Fixed
+- **Initial Scene Zoom Limit Null Safety**:
+  - Fixed an issue where `canvas.scene.initial.scale` being null or undefined (the default for scenes without explicit initial views) caused `minZoom` to evaluate to `0` or `NaN`. Clamping is now applied only when an initial scale is explicitly configured.
+- **Touchpad Token Placement Rotation**:
+  - Expanded touchpad placement rotation dampening to support Foundry V14 token placement (`canvas.tokens._placementContext`) alongside region template placement. Previously, rotating a placed token on a trackpad fell through to canvas panning.
+- **Alternative Mode Trackpad Pinch-to-Zoom**:
+  - Fixed pinch gestures falling through to canvas panning in Alternative mode by handling `event.ctrlKey` pinch gestures for both Touchpad and Alternative modes.
+- **Alternative Mode Browser Navigation Prevention**:
+  - Extended `overscrollBehaviorX = 'none'` to Alternative mode to prevent trackpad horizontal swipes from triggering native browser back/forward history navigation.
+- **Stage Event Listener Accumulation**:
+  - Prevented duplicate `mousedown` and `mouseup` listener registration on `canvas.stage` across repeated scene transitions.
+- **Federated Events & Null Safety for Middle-Click Drag**:
+  - Updated middle-mouse button detection to support PixiJS FederatedPointerEvents directly (`mouseDownEvent.button`) with fallbacks, and added guards against uninitialized `canvas.mouseInteractionManager`.
+- **Keyboard Modifier Cross-Version Compatibility**:
+  - Safely resolved `MODIFIER_KEYS` across Foundry V13 and V14 environments and incorporated `event.shiftKey` / `event.altKey` fallbacks.
+- **Viewport Resize Zoom Bounds Sync**:
+  - Added canvas resize listening so min/max zoom scale boundaries recalculate when the browser window or viewport changes.
+
 ## [14.3.5] - 2026-10-04
 - **Touchpad Template Placement Rotation Sensitivity**:
   - Implemented scroll delta accumulation dampening for template placement rotation in Touchpad mode, requiring ~40px of trackpad stroke per 5° rotation step. Prevents high-frequency trackpad wheel event bursts from spinning templates uncontrollably.

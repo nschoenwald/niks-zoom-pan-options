@@ -27,16 +27,26 @@ const updateMinMaxZoomLimits = () => {
   const paddedSceneHeight = sceneDimensions.height + (2 * padding)
   const { innerWidth, innerHeight } = window
   const grid = canvas.scene.grid
-  const factor = (9 / maxZoomFactor) * (canvas.scene._source.grid.size / grid.size)
-  const minZoom = Math.min(Math.min(innerWidth / paddedSceneWidth, innerHeight / paddedSceneHeight, 1) * minZoomFactor, canvas.scene.initial.scale)
-  const maxZoom = Math.max(Math.min(innerWidth / grid.sizeX, innerHeight / grid.sizeY) / factor, canvas.scene.initial.scale)
+  const sizeX = grid?.sizeX ?? grid?.size ?? 100
+  const sizeY = grid?.sizeY ?? grid?.size ?? 100
+  const sourceGridSize = canvas.scene._source?.grid?.size ?? grid?.size ?? 100
+  const factor = (9 / maxZoomFactor) * (sourceGridSize / (grid?.size ?? 100))
+  let minZoom = Math.min(innerWidth / paddedSceneWidth, innerHeight / paddedSceneHeight, 1) * minZoomFactor
+  let maxZoom = Math.max(Math.min(innerWidth / sizeX, innerHeight / sizeY) / factor, minZoom)
+  const initialScale = Number.isNumeric(canvas.scene.initial?.scale) ? canvas.scene.initial.scale : null
+  if (initialScale !== null) {
+    minZoom = Math.min(minZoom, initialScale)
+    maxZoom = Math.max(maxZoom, initialScale)
+  }
   CONFIG.Canvas.minZoom = minZoom
   CONFIG.Canvas.maxZoom = maxZoom
   // In V14, canvas.dimensions is frozen/readonly, so we wrap in try-catch
   // In V13, we still need to set these directly for the limits to take effect
   try {
-    canvas.dimensions.scale.min = minZoom
-    canvas.dimensions.scale.max = maxZoom
+    if (canvas.dimensions?.scale) {
+      canvas.dimensions.scale.min = minZoom
+      canvas.dimensions.scale.max = maxZoom
+    }
   } catch (e) {
     // V14: dimensions are frozen, CONFIG.Canvas.minZoom/maxZoom is sufficient
   }
@@ -72,34 +82,35 @@ class MouseManager_ZoomPanOptions_Override {
     return true
   }
 
-  #templateRotationAccumulator = 0
-  #lastTemplateRotationTime = 0
+  #placementRotationAccumulator = 0
+  #lastPlacementRotationTime = 0
 
   /**
-   * Rotate active template placement with touchpad sensitivity dampening.
-   * Accumulates trackpad scroll delta before triggering a 5° rotation step.
+   * Rotate active placement preview (template or token) with touchpad sensitivity dampening.
+   * Accumulates trackpad scroll delta before triggering a rotation step.
+   * @param {CanvasLayer} layer
    * @param {WheelEvent} event
    * @param {boolean} precise
    * @returns {boolean}
    */
-  _rotatePlacedTemplate(event, precise = true) {
+  _rotatePlacedTarget(layer, event, precise = true) {
     const now = Date.now()
-    if ((now - this.#lastTemplateRotationTime) > 250) {
-      this.#templateRotationAccumulator = 0
+    if ((now - this.#lastPlacementRotationTime) > 250) {
+      this.#placementRotationAccumulator = 0
     }
-    this.#lastTemplateRotationTime = now
+    this.#lastPlacementRotationTime = now
 
     const delta = event.delta ?? (event.deltaY === 0 ? event.deltaX : event.deltaY)
-    this.#templateRotationAccumulator += delta
+    this.#placementRotationAccumulator += delta
 
     const TOUCHPAD_ROTATION_THRESHOLD = 40
-    if (Math.abs(this.#templateRotationAccumulator) >= TOUCHPAD_ROTATION_THRESHOLD) {
-      const steps = Math.trunc(this.#templateRotationAccumulator / TOUCHPAD_ROTATION_THRESHOLD)
-      this.#templateRotationAccumulator -= steps * TOUCHPAD_ROTATION_THRESHOLD
+    if (Math.abs(this.#placementRotationAccumulator) >= TOUCHPAD_ROTATION_THRESHOLD) {
+      const steps = Math.trunc(this.#placementRotationAccumulator / TOUCHPAD_ROTATION_THRESHOLD)
+      this.#placementRotationAccumulator -= steps * TOUCHPAD_ROTATION_THRESHOLD
       const maxSteps = Math.min(Math.abs(steps), 2)
       const sign = Math.sign(steps)
       for (let i = 0; i < maxSteps; i++) {
-        canvas.regions._onMouseWheel({
+        layer._onMouseWheel({
           delta: sign,
           shiftKey: !precise,
         })
@@ -127,9 +138,14 @@ class MouseManager_ZoomPanOptions_Override {
     // ZPO:  ctrl and meta should work the same way
     if (event.ctrlKey || event.metaKey) event.preventDefault()
     // ZPO:  (re-)defining some variables
-    const isCtrl = game.keyboard.isModifierActive(foundry.helpers.interaction.KeyboardManager.MODIFIER_KEYS.CONTROL) // We cannot trust event.ctrlKey because of touchpads
-    const isShift = game.keyboard.isModifierActive(foundry.helpers.interaction.KeyboardManager.MODIFIER_KEYS.SHIFT)
-    const isAlt = game.keyboard.isModifierActive(foundry.helpers.interaction.KeyboardManager.MODIFIER_KEYS.ALT)
+    const MODIFIERS = foundry.helpers?.interaction?.KeyboardManager?.MODIFIER_KEYS ?? KeyboardManager?.MODIFIER_KEYS ?? {
+      CONTROL: 'Control',
+      SHIFT: 'Shift',
+      ALT: 'Alt',
+    }
+    const isCtrl = game.keyboard.isModifierActive(MODIFIERS.CONTROL) // We cannot trust event.ctrlKey because of touchpads
+    const isShift = event.shiftKey || game.keyboard.isModifierActive(MODIFIERS.SHIFT)
+    const isAlt = event.altKey || game.keyboard.isModifierActive(MODIFIERS.ALT)
 
     // ZPO:  commenting this out and rewriting it in a way that allows for horizontal-only scroll (via trackpad for example)
     //// Interpret shift+scroll as vertical scroll
@@ -153,18 +169,23 @@ class MouseManager_ZoomPanOptions_Override {
     const mode = getSetting('pan-zoom-mode')
 
     // Case 1 - active ruler
-    const ruler = canvas.controls.ruler
-    if (ruler.active && (isCtrl || isShift)) return ruler._onMouseWheel(event)
+    const ruler = canvas.controls?.ruler
+    if (ruler?.active && (isCtrl || isShift)) return ruler._onMouseWheel(event)
 
-    // Case 2 - active layer
-    // ZPO: this is where the game rotates stuff.  it doesn't support Touchpad or Alternative.  so for those two, we will
-    // simply skip and never go through with it -- instead relying on our own rotation code (possibly outdated...)
-    if (mode === 'Mouse')
-      if (isCtrl || isShift) return canvas.activeLayer._onMouseWheel(event)
+    // Resolve any active placement layer (Foundry V14 Region templates or Tokens)
+    const placementLayer = canvas.regions?._placementContext ? canvas.regions : (canvas.tokens?._placementContext ? canvas.tokens : null)
 
-    // Case 2.1 - active template placement rotation in Touchpad mode
-    if (mode === 'Touchpad' && isShift && canvas.regions?._placementContext) {
-      return checkZoomLock() && this._rotatePlacedTemplate(event, isShift && !isCtrl)
+    // Case 2 - active layer / placement rotation in Mouse mode
+    if (mode === 'Mouse') {
+      if (isCtrl || isShift) {
+        if (placementLayer) return placementLayer._onMouseWheel(event)
+        return canvas.activeLayer?._onMouseWheel(event)
+      }
+    }
+
+    // Case 2.1 - active placement rotation (regions/templates or tokens) in Touchpad mode
+    if (mode === 'Touchpad' && isShift && placementLayer) {
+      return checkZoomLock() && this._rotatePlacedTarget(placementLayer, event, isShift && !isCtrl)
     }
 
     // Case 2.2 - active layer handling (e.g. placeable rotation) for non-standard pan/zoom mode
@@ -190,6 +211,14 @@ class MouseManager_ZoomPanOptions_Override {
       }
     }
 
+    // Case 2.3 - active placement rotation in Alternative mode
+    if (mode === 'Alternative' && isAlt && (isCtrl || isShift) && placementLayer) {
+      return this.debounceRotationByRateLimit() && checkZoomLock() && placementLayer._onMouseWheel({
+        delta: event.delta,
+        shiftKey: isShift,
+      })
+    }
+
     // ZPO:  detailed override/rewrite for zooming and panning
 
     // Case 3 - zoom the canvas
@@ -202,7 +231,7 @@ class MouseManager_ZoomPanOptions_Override {
       return zoom(event)
     }
     // Case 3.1 - zoom the canvas if the user is doing a pinch gesture (which sends a wheel event with ctrlKey=true)
-    if (mode === 'Touchpad' && event.ctrlKey) {
+    if ((mode === 'Touchpad' || mode === 'Alternative') && event.ctrlKey) {
       return zoom(event)
     }
 
@@ -276,7 +305,7 @@ function disableMiddleMouseScrollIfMiddleMousePanIsActive(isActive) {
 }
 
 const disableBrowserGesturesIfTouchpad = (panZoomMode) => {
-  if (panZoomMode === 'Touchpad') {
+  if (panZoomMode === 'Touchpad' || panZoomMode === 'Alternative') {
     // disable browser back/forward gestures
     document.body.style.overscrollBehaviorX = 'none'
   } else if (document.body.style.overscrollBehaviorX === 'none') {
@@ -298,8 +327,10 @@ const createMimDebug = (mim) => (action, event, outcome = mim.handlerOutcomes.AC
 
 const handleMouseDown_forMiddleClickDrag = (mouseDownEvent) => {
   if (!getSetting('middle-mouse-pan')) return true
-  if (mouseDownEvent.data.originalEvent.button !== 1) return true // buttons other than middle click - ignoring
+  const button = mouseDownEvent?.button ?? mouseDownEvent?.nativeEvent?.button ?? mouseDownEvent?.data?.originalEvent?.button
+  if (button !== 1) return true // buttons other than middle click - ignoring
   const mim = canvas.mouseInteractionManager
+  if (!mim) return true
 
   /*
    * --- This section is awkward ---
@@ -439,8 +470,10 @@ const handleMouseDown_forMiddleClickDrag = (mouseDownEvent) => {
 
 const handleMouseUp_forMiddleClickDrag = (mouseUpEvent) => {
   if (!getSetting('middle-mouse-pan')) return true
-  if (mouseUpEvent.data.originalEvent.button !== 1) return true // buttons other than middle click - ignoring
+  const button = mouseUpEvent?.button ?? mouseUpEvent?.nativeEvent?.button ?? mouseUpEvent?.data?.originalEvent?.button
+  if (button !== 1) return true // buttons other than middle click - ignoring
   const mim = canvas.mouseInteractionManager
+  if (!mim) return true
   // Copying (and mildly altering) code from MouseInteractionManager functions. mostly replacing references
 
   const mim_handlePointerUp = (event) => {
@@ -751,10 +784,20 @@ Hooks.once('setup', function () {
 })
 
 Hooks.on('canvasReady', () => {
+  canvas.stage.off('mousedown', handleMouseDown_forMiddleClickDrag)
+  canvas.stage.off('mouseup', handleMouseUp_forMiddleClickDrag)
   canvas.stage.on('mousedown', handleMouseDown_forMiddleClickDrag)
-  canvas.stage.on('mouseup', handleMouseUp_forMiddleClickDrag)  // technically this isn't necessary, based on testing
+  canvas.stage.on('mouseup', handleMouseUp_forMiddleClickDrag)
   updateMinMaxZoomLimits()
 })
+
+Hooks.on('canvasInit', () => {
+  updateMinMaxZoomLimits()
+})
+
+window.addEventListener('resize', () => {
+  if (canvas.ready) updateMinMaxZoomLimits()
+}, { passive: true })
 
 Hooks.once('ready', () => {
   if (!game.settings.get(MODULE_ID, 'first-time-setup-done')) {
