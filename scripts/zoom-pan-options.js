@@ -72,6 +72,42 @@ class MouseManager_ZoomPanOptions_Override {
     return true
   }
 
+  #templateRotationAccumulator = 0
+  #lastTemplateRotationTime = 0
+
+  /**
+   * Rotate active template placement with touchpad sensitivity dampening.
+   * Accumulates trackpad scroll delta before triggering a 5° rotation step.
+   * @param {WheelEvent} event
+   * @param {boolean} precise
+   * @returns {boolean}
+   */
+  _rotatePlacedTemplate(event, precise = true) {
+    const now = Date.now()
+    if ((now - this.#lastTemplateRotationTime) > 250) {
+      this.#templateRotationAccumulator = 0
+    }
+    this.#lastTemplateRotationTime = now
+
+    const delta = event.delta ?? (event.deltaY === 0 ? event.deltaX : event.deltaY)
+    this.#templateRotationAccumulator += delta
+
+    const TOUCHPAD_ROTATION_THRESHOLD = 40
+    if (Math.abs(this.#templateRotationAccumulator) >= TOUCHPAD_ROTATION_THRESHOLD) {
+      const steps = Math.trunc(this.#templateRotationAccumulator / TOUCHPAD_ROTATION_THRESHOLD)
+      this.#templateRotationAccumulator -= steps * TOUCHPAD_ROTATION_THRESHOLD
+      const maxSteps = Math.min(Math.abs(steps), 2)
+      const sign = Math.sign(steps)
+      for (let i = 0; i < maxSteps; i++) {
+        canvas.regions._onMouseWheel({
+          delta: sign,
+          shiftKey: !precise,
+        })
+      }
+    }
+    return true
+  }
+
   /**
    * Begin listening to mouse events.
    * @internal
@@ -128,10 +164,7 @@ class MouseManager_ZoomPanOptions_Override {
 
     // Case 2.1 - active template placement rotation in Touchpad mode
     if (mode === 'Touchpad' && isShift && canvas.regions?._placementContext) {
-      return this.debounceRotationByRateLimit() && checkZoomLock() && canvas.regions._onMouseWheel({
-        delta: event.delta,
-        shiftKey: isShift && !isCtrl,
-      })
+      return checkZoomLock() && this._rotatePlacedTemplate(event, isShift && !isCtrl)
     }
 
     // Case 2.2 - active layer handling (e.g. placeable rotation) for non-standard pan/zoom mode

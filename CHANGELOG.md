@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.3.5] - 2026-10-04
+- **Touchpad Template Placement Rotation Sensitivity**:
+  - Implemented scroll delta accumulation dampening for template placement rotation in Touchpad mode, requiring ~40px of trackpad stroke per 5° rotation step. Prevents high-frequency trackpad wheel event bursts from spinning templates uncontrollably.
+
+
 ## [14.3.4] - 2026-10-03
 ### Fixed
 - **Canvas Zoom Delegation**:
