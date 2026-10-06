@@ -20,6 +20,13 @@
         "choice_touchpad": "Pavé tactile : faites glisser, rapprochez, faites pivoter avec Maj ou Ctrl+Maj",
         "choice_alternative": "Alternative : peut déplacer avec Shift, faire pivoter en maintenant Alt"
       },
+      "mouse-horizontal-scroll": {
+        "name": "Comportement du défilement horizontal (mode souris)",
+        "hint": "Détermine la façon dont le défilement horizontal (par ex. molette horizontale de pouce Logitech MX Master ou inclinaison) est géré en mode souris.",
+        "choice_ignore": "Ignorer le défilement horizontal",
+        "choice_pan": "Déplacer le canevas horizontalement",
+        "choice_zoom": "Zoomer sur le canevas (hérité)"
+      },
       "invert-vertical-scroll": {
         "name": "Inverser le défilement vertical",
         "hint": "Si défini sur vrai, vous ferez défiler vers le haut lorsque vous ferez glisser/défilerez vers le bas."

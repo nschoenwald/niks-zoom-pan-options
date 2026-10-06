@@ -221,16 +221,31 @@ class MouseManager_ZoomPanOptions_Override {
 
     // ZPO:  detailed override/rewrite for zooming and panning
 
-    // Case 3 - zoom the canvas
-    // (written to be readable)
+    // Case 3 - zoom or handle horizontal scroll in Mouse mode
+    if (mode === 'Mouse') {
+      const isHorizontal = deltaY === 0 && deltaX !== 0
+      if (isHorizontal) {
+        const action = getSetting('mouse-horizontal-scroll') ?? 'ignore'
+        if (action === 'pan') {
+          return panWithMultiplier(event)
+        }
+        if (action === 'zoom') {
+          return zoom(event)
+        }
+        // Default: 'ignore' - do nothing
+        return
+      }
+      return zoom(event)
+    }
+
+    // Case 3.1 - zoom the canvas if holding Ctrl (Touchpad or Alternative mode)
     if (
-      mode === 'Mouse'
-      || (mode === 'Touchpad' && isCtrl)
+      (mode === 'Touchpad' && isCtrl)
       || (mode === 'Alternative' && isCtrl)
     ) {
       return zoom(event)
     }
-    // Case 3.1 - zoom the canvas if the user is doing a pinch gesture (which sends a wheel event with ctrlKey=true)
+    // Case 3.2 - zoom the canvas if the user is doing a pinch gesture (which sends a wheel event with ctrlKey=true)
     if ((mode === 'Touchpad' || mode === 'Alternative') && event.ctrlKey) {
       return zoom(event)
     }
@@ -631,6 +646,19 @@ Hooks.on('init', function () {
     },
     onChange: disableBrowserGesturesIfTouchpad,
     default: 'Mouse',
+  })
+  game.settings.register(MODULE_ID, 'mouse-horizontal-scroll', {
+    name: localizeSetting('mouse-horizontal-scroll', 'name'),
+    hint: localizeSetting('mouse-horizontal-scroll', 'hint'),
+    scope: 'client',
+    config: true,
+    type: String,
+    choices: {
+      'ignore': localizeSetting('mouse-horizontal-scroll', 'choice_ignore'),
+      'pan': localizeSetting('mouse-horizontal-scroll', 'choice_pan'),
+      'zoom': localizeSetting('mouse-horizontal-scroll', 'choice_zoom'),
+    },
+    default: 'ignore',
   })
   game.settings.register(MODULE_ID, 'middle-mouse-pan', {
     name: localizeSetting('middle-mouse-pan', 'name'),

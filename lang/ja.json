@@ -20,6 +20,13 @@
         "choice_touchpad": "タッチパッド：ドラッグ、ピンチ、ShiftかCtrl+Shiftで回転",
         "choice_alternative": "代替：Shiftでパン、Altで回転"
       },
+      "mouse-horizontal-scroll": {
+        "name": "水平スクロールの動作（マウスモード）",
+        "hint": "マウスモード時の水平スクロール（Logitech MX Masterのサムホイールやチルトホイールなど）の動作を設定します。",
+        "choice_ignore": "水平スクロールを無視",
+        "choice_pan": "キャンバスを水平方向にパン",
+        "choice_zoom": "キャンバスをズーム（従来）"
+      },
       "invert-vertical-scroll": {
         "name": "垂直スクロールの反転",
         "hint": "チェックすると、下にドラッグ/スクロールした際に上にスクロールします。"

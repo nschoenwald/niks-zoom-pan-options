@@ -20,6 +20,13 @@
         "choice_touchpad": "Touchpad: drag, pinch, rotate with Shift or Ctrl+Shift",
         "choice_alternative": "Alternative: can pan with Shift, rotate while holding Alt"
       },
+      "mouse-horizontal-scroll": {
+        "name": "Horizontal scroll behavior (Mouse mode)",
+        "hint": "Determines how horizontal scrolling (e.g. mouse thumb wheels like Logitech MX Master or tilt wheels) is handled in Mouse mode.",
+        "choice_ignore": "Ignore horizontal scroll",
+        "choice_pan": "Pan canvas horizontally",
+        "choice_zoom": "Zoom canvas (legacy)"
+      },
       "invert-vertical-scroll": {
         "name": "Invert vertical scroll",
         "hint": "If set to true, you will scroll up when dragging/scrolling down."

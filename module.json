@@ -2,7 +2,7 @@
   "id": "niks-zoom-pan-options",
   "title": "Nik's Zoom / Pan Options",
   "description": "Adds touchpad/scrollwheel zoom/pan support, and other options.",
-  "version": "14.4.0",
+  "version": "14.5.0",
   "compatibility": {
     "minimum": "13",
     "verified": "14"

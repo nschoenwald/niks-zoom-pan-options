@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.5.0] - 2026-10-06
+### Added
+- **Horizontal Scroll Behavior Setting (Mouse Mode)**:
+  - Added a client setting `Horizontal scroll behavior (Mouse mode)` (`mouse-horizontal-scroll`) with choices for `Ignore horizontal scroll` (default), `Pan canvas horizontally`, and `Zoom canvas (legacy)`.
+  - Fixes an issue where horizontal mouse scroll wheels (such as the Logitech MX Master 3/4 horizontal thumb wheel) or horizontal tilt wheels zoomed the canvas when in Mouse mode.
+
 ## [14.4.0] - 2026-10-04
 ### Fixed
 - **Initial Scene Zoom Limit Null Safety**:
