@@ -16,24 +16,25 @@ function localizeKeybinding(scope, str) {
 }
 
 const updateMinMaxZoomLimits = () => {
-  if (!canvas.scene) return
+  const c = globalThis.canvas
+  if (!c?.scene) return
   const maxZoomFactor = getSetting('max-zoom-override') ?? 3
   const minZoomFactor = getSetting('min-zoom-override-v2') ?? 1
   // code based on the fvtt getDimensions function, which defaults to particular min and max scale values;
   // in my code here I repeat the calculation but allow changing the factors
-  const sceneDimensions = canvas.scene.getDimensions()
+  const sceneDimensions = c.scene.getDimensions()
   const padding = sceneDimensions.size
   const paddedSceneWidth = sceneDimensions.width + (2 * padding)
   const paddedSceneHeight = sceneDimensions.height + (2 * padding)
   const { innerWidth, innerHeight } = window
-  const grid = canvas.scene.grid
+  const grid = c.scene.grid
   const sizeX = grid?.sizeX ?? grid?.size ?? 100
   const sizeY = grid?.sizeY ?? grid?.size ?? 100
-  const sourceGridSize = canvas.scene._source?.grid?.size ?? grid?.size ?? 100
+  const sourceGridSize = c.scene._source?.grid?.size ?? grid?.size ?? 100
   const factor = (9 / maxZoomFactor) * (sourceGridSize / (grid?.size ?? 100))
   let minZoom = Math.min(innerWidth / paddedSceneWidth, innerHeight / paddedSceneHeight, 1) * minZoomFactor
   let maxZoom = Math.max(Math.min(innerWidth / sizeX, innerHeight / sizeY) / factor, minZoom)
-  const initialScale = Number.isNumeric(canvas.scene.initial?.scale) ? canvas.scene.initial.scale : null
+  const initialScale = Number.isNumeric(c.scene.initial?.scale) ? c.scene.initial.scale : null
   if (initialScale !== null) {
     minZoom = Math.min(minZoom, initialScale)
     maxZoom = Math.max(maxZoom, initialScale)
@@ -43,9 +44,9 @@ const updateMinMaxZoomLimits = () => {
   // In V14, canvas.dimensions is frozen/readonly, so we wrap in try-catch
   // In V13, we still need to set these directly for the limits to take effect
   try {
-    if (canvas.dimensions?.scale) {
-      canvas.dimensions.scale.min = minZoom
-      canvas.dimensions.scale.max = maxZoom
+    if (c.dimensions?.scale) {
+      c.dimensions.scale.min = minZoom
+      c.dimensions.scale.max = maxZoom
     }
   } catch (e) {
     // V14: dimensions are frozen, CONFIG.Canvas.minZoom/maxZoom is sufficient
@@ -160,7 +161,8 @@ class MouseManager_ZoomPanOptions_Override {
     event.delta = deltaY === 0 ? deltaX : deltaY
 
     // Take no actions if the canvas is not hovered
-    if (!canvas.ready) return
+    const c = globalThis.canvas
+    if (!c?.ready) return
     const hover = document.elementFromPoint(event.clientX, event.clientY)
     if (!hover || (hover.id !== 'board')) return
     event.preventDefault()
@@ -169,17 +171,17 @@ class MouseManager_ZoomPanOptions_Override {
     const mode = getSetting('pan-zoom-mode')
 
     // Case 1 - active ruler
-    const ruler = canvas.controls?.ruler
+    const ruler = c.controls?.ruler
     if (ruler?.active && (isCtrl || isShift)) return ruler._onMouseWheel(event)
 
     // Resolve any active placement layer (Foundry V14 Region templates or Tokens)
-    const placementLayer = canvas.regions?._placementContext ? canvas.regions : (canvas.tokens?._placementContext ? canvas.tokens : null)
+    const placementLayer = c.regions?._placementContext ? c.regions : (c.tokens?._placementContext ? c.tokens : null)
 
     // Case 2 - active layer / placement rotation in Mouse mode
     if (mode === 'Mouse') {
       if (isCtrl || isShift) {
         if (placementLayer) return placementLayer._onMouseWheel(event)
-        return canvas.activeLayer?._onMouseWheel(event)
+        return c.activeLayer?._onMouseWheel(event)
       }
     }
 
@@ -189,7 +191,7 @@ class MouseManager_ZoomPanOptions_Override {
     }
 
     // Case 2.2 - active layer handling (e.g. placeable rotation) for non-standard pan/zoom mode
-    const layer = canvas.activeLayer
+    const layer = c.activeLayer
     const layerPossiblyHasRotatableObjects = layer?.options?.rotatableObjects
     const currentlyHasRotationTarget = layer?.options?.controllableObjects ? layer?.controlled?.length : !!layer?.hover
     if (layerPossiblyHasRotatableObjects && currentlyHasRotationTarget) {
@@ -281,31 +283,35 @@ function zoom(event) {
   const speedBasedZoom = 1.05 ** (-delta * 0.01 * multiplier)
   const scaleChangeRatio = multiplier === 0 ? fivePercentZoom : speedBasedZoom
 
-  const scale = canvas.stage.scale.x // scale x and scale y are the same
+  const c = globalThis.canvas
+  if (!c?.stage?.scale || !c?.stage?.pivot) return
+  const scale = c.stage.scale.x // scale x and scale y are the same
   const targetScale = scaleChangeRatio * scale
   // Prefer canvas.dimensions values (set on V13), fall back to CONFIG.Canvas (set on both V13/V14)
-  const max = canvas.dimensions?.scale?.max ?? CONFIG.Canvas.maxZoom
-  const min = canvas.dimensions?.scale?.min ?? CONFIG.Canvas.minZoom
+  const max = c.dimensions?.scale?.max ?? CONFIG.Canvas.maxZoom
+  const min = c.dimensions?.scale?.min ?? CONFIG.Canvas.minZoom
   if (targetScale > max || targetScale < min) {
     if (scale === max || scale === min) {
       console.debug("Nik's Zoom / Pan Options |", `scale is at limit (${scale})`)
       return
     }
     console.debug("Nik's Zoom / Pan Options |", `scale (${targetScale}) would exceed limit, bounding to interval [${min}, ${max}].`)
-    canvas.pan({ x: canvas.stage.pivot.x, y: canvas.stage.pivot.y, scale: Math.clamp(targetScale, min, max) })
+    c.pan({ x: c.stage.pivot.x, y: c.stage.pivot.y, scale: Math.clamp(targetScale, min, max) })
     return
   }
   /** note:  minZoom and maxZoom will be applied to canvas.dimensions.scale.max (etc) and then used in _constrainView */
-  canvas.pan({ x: canvas.stage.pivot.x, y: canvas.stage.pivot.y, scale: targetScale })
+  c.pan({ x: c.stage.pivot.x, y: c.stage.pivot.y, scale: targetScale })
 }
 
 function panWithMultiplier(event) {
   if (!checkPanLock()) return
-  const multiplier = (1 / canvas.stage.scale.x) * getSetting('pan-speed-multiplier')
+  const c = globalThis.canvas
+  if (!c?.stage?.scale || !c?.stage?.pivot) return
+  const multiplier = (1 / c.stage.scale.x) * getSetting('pan-speed-multiplier')
   const invertVerticalScroll = getSetting('invert-vertical-scroll') ? -1 : 1
-  const x = canvas.stage.pivot.x + event.deltaX * multiplier
-  const y = canvas.stage.pivot.y + event.deltaY * multiplier * invertVerticalScroll
-  canvas.pan({ x, y })
+  const x = c.stage.pivot.x + event.deltaX * multiplier
+  const y = c.stage.pivot.y + event.deltaY * multiplier * invertVerticalScroll
+  c.pan({ x, y })
 }
 
 function disableMiddleMouseScrollIfMiddleMousePanIsActive(isActive) {
@@ -344,7 +350,8 @@ const handleMouseDown_forMiddleClickDrag = (mouseDownEvent) => {
   if (!getSetting('middle-mouse-pan')) return true
   const button = mouseDownEvent?.button ?? mouseDownEvent?.nativeEvent?.button ?? mouseDownEvent?.data?.originalEvent?.button
   if (button !== 1) return true // buttons other than middle click - ignoring
-  const mim = canvas.mouseInteractionManager
+  const c = globalThis.canvas
+  const mim = c?.mouseInteractionManager
   if (!mim) return true
 
   /*
@@ -387,7 +394,7 @@ const handleMouseDown_forMiddleClickDrag = (mouseDownEvent) => {
     //// Was the right-click event handled by the callback?
     //const priorState = mim.state;
     if (mim.state === mim.states.HOVER) mim.state = mim.states.CLICKED
-    canvas.currentMouseManager = mim
+    if (c) c.currentMouseManager = mim
     //if ( mim.callback(action, event) === false ) {
     //  mim.state = priorState;
     //  canvas.currentMouseManager = null;
@@ -423,7 +430,7 @@ const handleMouseDown_forMiddleClickDrag = (mouseDownEvent) => {
 
     // Limit dragging to 60 updates per second
     const now = Date.now()
-    if ((now - mim.dragTime) < canvas.app.ticker.elapsedMS) return
+    if (c?.app?.ticker && (now - mim.dragTime) < c.app.ticker.elapsedMS) return
     mim.dragTime = now
 
     // Update interaction data
@@ -487,7 +494,8 @@ const handleMouseUp_forMiddleClickDrag = (mouseUpEvent) => {
   if (!getSetting('middle-mouse-pan')) return true
   const button = mouseUpEvent?.button ?? mouseUpEvent?.nativeEvent?.button ?? mouseUpEvent?.data?.originalEvent?.button
   if (button !== 1) return true // buttons other than middle click - ignoring
-  const mim = canvas.mouseInteractionManager
+  const c = globalThis.canvas
+  const mim = c?.mouseInteractionManager
   if (!mim) return true
   // Copying (and mildly altering) code from MouseInteractionManager functions. mostly replacing references
 
@@ -557,7 +565,7 @@ const handleMouseUp_forMiddleClickDrag = (mouseUpEvent) => {
 const checkZoomLock = () => {
   // LockView compatibility workaround
   if (isConflictingWithLockView) {
-    const lockZoom = canvas.scene.getFlag('LockView', 'lockZoom')
+    const lockZoom = globalThis.canvas?.scene?.getFlag('LockView', 'lockZoom')
     if (lockZoom) {
       return false
     }
@@ -567,7 +575,7 @@ const checkZoomLock = () => {
 
 const checkPanLock = () => {
   if (isConflictingWithLockView) {
-    const lockPan = canvas.scene.getFlag('LockView', 'lockPan')
+    const lockPan = globalThis.canvas?.scene?.getFlag('LockView', 'lockPan')
     if (lockPan) {
       return false
     }
@@ -811,11 +819,12 @@ Hooks.once('setup', function () {
   console.log("Done setting up Nik's Zoom / Pan Options.")
 })
 
-Hooks.on('canvasReady', () => {
-  canvas.stage.off('mousedown', handleMouseDown_forMiddleClickDrag)
-  canvas.stage.off('mouseup', handleMouseUp_forMiddleClickDrag)
-  canvas.stage.on('mousedown', handleMouseDown_forMiddleClickDrag)
-  canvas.stage.on('mouseup', handleMouseUp_forMiddleClickDrag)
+Hooks.on('canvasReady', (canvas) => {
+  const c = canvas ?? globalThis.canvas
+  c?.stage?.off('mousedown', handleMouseDown_forMiddleClickDrag)
+  c?.stage?.off('mouseup', handleMouseUp_forMiddleClickDrag)
+  c?.stage?.on('mousedown', handleMouseDown_forMiddleClickDrag)
+  c?.stage?.on('mouseup', handleMouseUp_forMiddleClickDrag)
   updateMinMaxZoomLimits()
 })
 
@@ -824,7 +833,7 @@ Hooks.on('canvasInit', () => {
 })
 
 window.addEventListener('resize', () => {
-  if (canvas.ready) updateMinMaxZoomLimits()
+  if (globalThis.canvas?.ready) updateMinMaxZoomLimits()
 }, { passive: true })
 
 Hooks.once('ready', () => {

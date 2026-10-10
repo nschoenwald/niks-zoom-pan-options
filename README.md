@@ -11,7 +11,7 @@ Adds touchpad and scroll wheel pan and zoom controls, along with other canvas na
 - **Horizontal Scroll Behavior**: In Mouse mode, configure horizontal scrolling (e.g., Logitech MX Master thumb wheels or tilt wheels) to ignore (default), pan the canvas horizontally, or zoom.
 - **Placement Rotation Dampening**: Smooth 5° rotation steps for template and token placement workflows in Touchpad mode, preventing high-frequency trackpad bursts from spinning previews.
 - **Middle-Mouse Drag Pan**: Middle-click drag to pan the canvas just like right-click drag, while preventing unwanted browser autoscroll overlay icons.
-- **Custom Min/Max Zoom Limits**: Configurable overrides for scene zoom scale limits.
+- **Custom Min/Max Zoom Limits**: Configurable overrides for scene zoom scale limits with dynamic viewport resize synchronization.
 - **Keybinding Toggles**: Easily switch between Mouse, Touchpad, and Alternative modes on the fly.
 
 ---

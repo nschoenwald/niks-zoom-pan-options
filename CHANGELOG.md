@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.5.1] - 2026-10-10
+### Fixed
+- **Canvas Reference Safety on Load**:
+  - Fixed a `ReferenceError: canvas is not defined` error occurring on initial world load or early window resize before Foundry initializes the game canvas.
+
 ## [14.5.0] - 2026-10-06
 ### Added
 - **Horizontal Scroll Behavior Setting (Mouse Mode)**:
