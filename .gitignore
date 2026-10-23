@@ -1,3 +1,7 @@
 *.zip
 .DS_Store
-CHANGELOG_internal.md
+
+# Markdown: ignore all, except the docs shipped with the module
+*.md
+!README.md
+!CHANGELOG.md
