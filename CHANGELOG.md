@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.6.0] - 2026-10-26
+### Fixed
+- **Touchpad / Alternative modes and custom wheel handling**: The module's own scroll-wheel handling could fail to install on startup, leaving Foundry's default wheel behavior in place. It now hooks in reliably.
+- **Middle-mouse drag**: Fixed leftover drag listeners piling up after each middle-click, which could cause stuttering or duplicate drag handling during later box-selections or right-click drags.
+- **Middle-mouse setting**: Turning "Middle-mouse to pan" off no longer clears other page mouse handlers.
+- **Setup prompt**: The first-time Mouse/Touchpad prompt now uses Foundry's current dialog style (no more deprecation warning in the console).
+
+### Performance
+- Scrolling and panning no longer re-read settings from storage on every wheel event, and zoom limits are no longer recalculated twice per scene load.
+
 ## [14.5.1] - 2026-10-10
 ### Fixed
 - **Canvas Reference Safety on Load**:
