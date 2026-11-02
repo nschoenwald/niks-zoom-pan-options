@@ -1,0 +1,65 @@
+{
+  "niks-zoom-pan-options": {
+    "settings": {
+      "middle-mouse-pan": {
+        "name": "Tasto centrale per spostare",
+        "hint": "Premere il tasto centrale del mouse sposta la scena, invece di non fare nulla come predefinito."
+      },
+      "max-zoom-override": {
+        "name": "Sostituisci zoom massimo",
+        "hint": "Sostituisce il limite massimo di zoom (non può limitare oltre lo zoom iniziale della scena); un valore più alto permette di vedere i dettagli più da vicino. 3 è il predefinito di Foundry (fino a x3)."
+      },
+      "min-zoom-override": {
+        "name": "Sostituisci zoom minimo",
+        "hint": "Sostituisce il limite minimo di zoom (non può limitare oltre lo zoom iniziale della scena); un valore più basso permette di vedere più scena insieme. 1 è il predefinito di Foundry (fino a x1 pixel per pixel, più il margine)."
+      },
+      "pan-zoom-mode": {
+        "name": "Modalità spostamento/zoom",
+        "hint": "Mouse: comportamento standard di Foundry. Zoom con la rotellina. Rotazione con Maiusc+rotellina e Ctrl+rotellina.\nTouchpad: spostamento trascinando con due dita. Zoom con il pizzico a due dita o Ctrl+scorrimento. Rotazione con Maiusc+scorrimento e Ctrl+Maiusc+scorrimento.\nAlternativa: spostamento trascinando con due dita, scorrendo o con Maiusc+scorrimento. Zoom con il pizzico a due dita o Ctrl+scorrimento. Rotazione con Alt+Maiusc+scorrimento e Alt+Ctrl+scorrimento.",
+        "choice_mouse": "Mouse: comportamento standard di Foundry",
+        "choice_touchpad": "Touchpad: trascina, pizzica, ruota con Maiusc o Ctrl+Maiusc",
+        "choice_alternative": "Alternativa: sposta con Maiusc, ruota tenendo premuto Alt"
+      },
+      "mouse-horizontal-scroll": {
+        "name": "Scorrimento orizzontale (modalità mouse)",
+        "hint": "Determina come viene gestito lo scorrimento orizzontale (ad es. rotelline per il pollice come sul Logitech MX Master o rotelline inclinabili) in modalità mouse.",
+        "choice_ignore": "Ignora lo scorrimento orizzontale",
+        "choice_pan": "Sposta la scena in orizzontale",
+        "choice_zoom": "Zoom della scena (legacy)"
+      },
+      "invert-vertical-scroll": {
+        "name": "Inverti scorrimento verticale",
+        "hint": "Se attivo, scorrerai verso l'alto trascinando o scorrendo verso il basso."
+      },
+      "zoom-speed-multiplier": {
+        "name": "Velocità dello zoom",
+        "hint": "Moltiplica la velocità dello zoom. 0,1 o 10 potrebbero andare meglio per alcuni touchpad. 0 per il comportamento predefinito di Foundry (che ignora l'«intensità» dello scorrimento e risulta peggiore sui touchpad)."
+      },
+      "pan-speed-multiplier": {
+        "name": "Velocità di spostamento (modalità touchpad)",
+        "hint": "Moltiplica la velocità di spostamento in modalità touchpad o alternativa. Il predefinito è 1, che dovrebbe essere vicino alla velocità di trascinamento della scena con il tasto destro."
+      }
+    },
+    "keybindings": {
+      "toggle-touchpad-mode": {
+        "name": "Alterna modalità mouse/touchpad"
+      },
+      "toggle-alternative-mode": {
+        "name": "Alterna modalità mouse/alternativa"
+      },
+      "notifications": {
+        "Mouse": "Nik's Zoom / Pan Options: modalità mouse attivata.",
+        "Touchpad": "Nik's Zoom / Pan Options: modalità touchpad attivata.",
+        "Alternative": "Nik's Zoom / Pan Options: modalità alternativa attivata."
+      }
+    },
+    "dialogs": {
+      "setup": {
+        "title": "Nik's Zoom / Pan Options - Configurazione",
+        "content": "<p>Usi un mouse o un touchpad?<br>Le impostazioni di Nik's Zoom & Pan Options verranno ottimizzate di conseguenza.</p>",
+        "button_mouse": "Mouse",
+        "button_touchpad": "Touchpad"
+      }
+    }
+  }
+}

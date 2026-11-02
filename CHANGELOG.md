@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.7.0] - 2026-11-02
+### Added
+- New translations: German, Spanish, Italian, Brazilian Portuguese, Polish and Czech. The module is now available in nine languages.
+- Language names in Foundry's language list are now shown in their own language.
+
 ## [14.6.0] - 2026-10-26
 ### Fixed
 - **Touchpad / Alternative modes and custom wheel handling**: The module's own scroll-wheel handling could fail to install on startup, leaving Foundry's default wheel behavior in place. It now hooks in reliably.

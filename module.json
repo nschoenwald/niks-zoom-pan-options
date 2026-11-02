@@ -2,7 +2,7 @@
   "id": "niks-zoom-pan-options",
   "title": "Nik's Zoom / Pan Options",
   "description": "Adds touchpad/scrollwheel zoom/pan support, and other options.",
-  "version": "14.6.0",
+  "version": "14.7.0",
   "compatibility": {
     "minimum": "13",
     "verified": "14"
@@ -14,20 +14,47 @@
     {
       "lang": "en",
       "name": "English",
-      "path": "lang/en.json",
-      "flags": {}
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "de",
+      "name": "Deutsch",
+      "path": "lang/de.json"
     },
     {
       "lang": "fr",
-      "name": "French",
-      "path": "lang/fr.json",
-      "flags": {}
+      "name": "Français",
+      "path": "lang/fr.json"
+    },
+    {
+      "lang": "es",
+      "name": "Español",
+      "path": "lang/es.json"
+    },
+    {
+      "lang": "it",
+      "name": "Italiano",
+      "path": "lang/it.json"
+    },
+    {
+      "lang": "pt-BR",
+      "name": "Português (Brasil)",
+      "path": "lang/pt-BR.json"
     },
     {
       "lang": "ja",
       "name": "日本語",
-      "path": "lang/ja.json",
-      "flags": {}
+      "path": "lang/ja.json"
+    },
+    {
+      "lang": "pl",
+      "name": "Polski",
+      "path": "lang/pl.json"
+    },
+    {
+      "lang": "cs",
+      "name": "Čeština",
+      "path": "lang/cs.json"
     }
   ],
   "url": "https://github.com/nschoenwald/niks-zoom-pan-options",

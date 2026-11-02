@@ -1,0 +1,65 @@
+{
+  "niks-zoom-pan-options": {
+    "settings": {
+      "middle-mouse-pan": {
+        "name": "Mittlere Maustaste zum Verschieben",
+        "hint": "Ein Druck auf die mittlere Maustaste verschiebt die Szene, statt wie standardmäßig nichts zu tun."
+      },
+      "max-zoom-override": {
+        "name": "Maximalen Zoom überschreiben",
+        "hint": "Überschreibt die Obergrenze des Zooms (kann nicht über den anfänglichen Szenenzoom hinaus begrenzen). Höher bedeutet, dass du Details näher sehen kannst. 3 ist der Foundry-Standard (bis zu 3-fache Vergrößerung)."
+      },
+      "min-zoom-override": {
+        "name": "Minimalen Zoom überschreiben",
+        "hint": "Überschreibt die Untergrenze des Zooms (kann nicht über den anfänglichen Szenenzoom hinaus begrenzen). Niedriger bedeutet, dass du mehr von der Szene auf einmal siehst. 1 ist der Foundry-Standard (bis zu 1-facher Pixel-zu-Pixel-Skalierung, plus Rand)."
+      },
+      "pan-zoom-mode": {
+        "name": "Verschiebe-/Zoommodus",
+        "hint": "Maus: Standardverhalten von Foundry. Zoomen mit dem Mausrad. Drehen mit Umschalt+Mausrad und Strg+Mausrad.\nTouchpad: Verschieben durch Ziehen mit zwei Fingern. Zoomen durch Aufziehen/Zusammenziehen mit zwei Fingern oder Strg+Scrollen. Drehen mit Umschalt+Scrollen und Strg+Umschalt+Scrollen.\nAlternativ: Verschieben durch Ziehen mit zwei Fingern, Scrollen oder Umschalt+Scrollen. Zoomen durch Aufziehen/Zusammenziehen mit zwei Fingern oder Strg+Scrollen. Drehen mit Alt+Umschalt+Scrollen und Alt+Strg+Scrollen.",
+        "choice_mouse": "Maus: Standardverhalten von Foundry",
+        "choice_touchpad": "Touchpad: ziehen, zoomen, drehen mit Umschalt oder Strg+Umschalt",
+        "choice_alternative": "Alternativ: Verschieben mit Umschalt, Drehen bei gedrückter Alt-Taste"
+      },
+      "mouse-horizontal-scroll": {
+        "name": "Horizontales Scrollen (Mausmodus)",
+        "hint": "Legt fest, wie horizontales Scrollen (z. B. Daumenräder wie bei der Logitech MX Master oder kippbare Mausräder) im Mausmodus behandelt wird.",
+        "choice_ignore": "Horizontales Scrollen ignorieren",
+        "choice_pan": "Szene horizontal verschieben",
+        "choice_zoom": "Szene zoomen (alt)"
+      },
+      "invert-vertical-scroll": {
+        "name": "Vertikales Scrollen umkehren",
+        "hint": "Wenn aktiviert, scrollst du nach oben, wenn du nach unten ziehst oder scrollst."
+      },
+      "zoom-speed-multiplier": {
+        "name": "Zoomgeschwindigkeit",
+        "hint": "Multipliziert die Zoomgeschwindigkeit. Für manche Touchpads sind 0,1 oder 10 besser. 0 für das Standardverhalten von Foundry (das die „Intensität“ des Scrollens ignoriert und sich auf Touchpads schlechter anfühlt)."
+      },
+      "pan-speed-multiplier": {
+        "name": "Verschiebegeschwindigkeit (Touchpad-Modus)",
+        "hint": "Multipliziert die Verschiebegeschwindigkeit im Touchpad- oder Alternativmodus. Standard ist 1, was ungefähr der Geschwindigkeit beim Ziehen der Szene mit der rechten Maustaste entspricht."
+      }
+    },
+    "keybindings": {
+      "toggle-touchpad-mode": {
+        "name": "Zwischen Maus- und Touchpad-Modus wechseln"
+      },
+      "toggle-alternative-mode": {
+        "name": "Zwischen Maus- und Alternativmodus wechseln"
+      },
+      "notifications": {
+        "Mouse": "Nik's Zoom / Pan Options: Mausmodus aktiviert.",
+        "Touchpad": "Nik's Zoom / Pan Options: Touchpad-Modus aktiviert.",
+        "Alternative": "Nik's Zoom / Pan Options: Alternativmodus aktiviert."
+      }
+    },
+    "dialogs": {
+      "setup": {
+        "title": "Nik's Zoom / Pan Options – Einrichtung",
+        "content": "<p>Benutzt du eine Maus oder ein Touchpad?<br>Die Einstellungen von Nik's Zoom & Pan Options werden entsprechend optimiert.</p>",
+        "button_mouse": "Maus",
+        "button_touchpad": "Touchpad"
+      }
+    }
+  }
+}
