@@ -33,7 +33,7 @@ The German, Spanish, Italian, Brazilian Portuguese, Polish and Czech translation
 
 ---
 
-## Other Modules by Nik
+## Modules by Nik
 
 ### 🎲 D&D 5e Specific
 * **[Nik's DnD5e Tweaks](https://github.com/nschoenwald/niks-dnd5e-tweaks)** – Consolidated collection of quality-of-life enhancements and combat automation tweaks for DnD5e.
