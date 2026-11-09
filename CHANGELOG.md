@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.7.2] - 2026-11-09
+### Fixed
+- **Middle-mouse drag while drawing**: Panning with the middle mouse button while drawing a region, drawing, wall or other shape no longer breaks the shape that is being drawn. The canvas pans and you can keep drawing where you left off.
+
 ## [14.7.1] - 2026-11-04
 ### Removed
 - Removed the Spanish, Italian, Brazilian Portuguese, Polish and Czech translations. They were machine-translated and never checked by a native speaker. Players who use Foundry in one of these languages now see this module in English. Translations by native speakers are welcome as an issue or pull request.

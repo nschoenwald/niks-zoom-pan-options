@@ -5,6 +5,8 @@ let _savedOnMouseDown = null
 let _middleMouseDownBlockerActive = false
 // the pointermove listener attached for an active middle-click drag, so it can be detached again
 let _middleDragMoveHandler = null
+// screen position of the last pointer event of a "standalone" middle-click pan (see startStandaloneMiddlePan)
+let _standalonePan = null
 
 const MODIFIERS = foundry.helpers.interaction.KeyboardManager.MODIFIER_KEYS
 
@@ -359,6 +361,62 @@ const createMimDebug = (mim) => (action, event, outcome = mim.handlerOutcomes.AC
   }
 }
 
+/**
+ * Is another canvas interaction workflow in progress (e.g. drawing a region, drawing, wall or template, or dragging
+ * a placeable)? Middle-click panning must then not touch any MouseInteractionManager: pretending to be a right-drag
+ * would overwrite the workflow's origin and later cancel it as a right-drag, so the left-drag workflow never got its
+ * own drop/cancel and its preview was left broken.
+ */
+const isOtherMouseWorkflowActive = (mim) => {
+  const states = mim.states
+  if (mim.state > states.HOVER && !mim._dragRight) return true
+  const current = globalThis.canvas?.currentMouseManager
+  return !!current && current !== mim && current.state > states.HOVER
+}
+
+const panByStandaloneMiddleDrag = (event) => {
+  if (!_standalonePan) return
+  if (!(event.buttons & 4)) return endStandaloneMiddlePan() // middle button was released outside of the window
+  const c = globalThis.canvas
+  const scale = c?.stage?.scale?.x
+  if (!scale) return
+  const speed = CONFIG.Canvas.dragSpeedModifier ?? 1
+  const dx = (event.clientX - _standalonePan.x) / scale * speed
+  const dy = (event.clientY - _standalonePan.y) / scale * speed
+  _standalonePan = { x: event.clientX, y: event.clientY }
+  if (dx || dy) c.pan({ x: c.stage.pivot.x - dx, y: c.stage.pivot.y - dy })
+}
+
+const startStandaloneMiddlePan = (event) => {
+  endStandaloneMiddlePan()
+  const x = event.clientX ?? event.nativeEvent?.clientX
+  const y = event.clientY ?? event.nativeEvent?.clientY
+  if (x === undefined || y === undefined) return
+  _standalonePan = { x, y }
+  window.addEventListener('pointermove', panByStandaloneMiddleDrag, true)
+  window.addEventListener('blur', endStandaloneMiddlePan)
+}
+
+const endStandaloneMiddlePan = () => {
+  if (!_standalonePan) return
+  _standalonePan = null
+  window.removeEventListener('pointermove', panByStandaloneMiddleDrag, true)
+  window.removeEventListener('blur', endStandaloneMiddlePan)
+}
+
+/**
+ * Registered on window (capture) during `init`, i.e. before PIXI's own window `pointerup` listener, which is added when
+ * the canvas application is created after `init`. Swallowing the middle-button release keeps it away from the
+ * MouseInteractionManager, which does not filter `pointerup` by button and would otherwise treat it as the drop
+ * (or cancel) of the region / drawing that is being created.
+ */
+const handleWindowPointerUp_forStandaloneMiddlePan = (event) => {
+  if (!_standalonePan || event.button !== 1) return
+  endStandaloneMiddlePan()
+  event.stopImmediatePropagation()
+  event.preventDefault()
+}
+
 const handleMouseDown_forMiddleClickDrag = (mouseDownEvent) => {
   if (!getSetting('middle-mouse-pan')) return true
   const button = mouseDownEvent?.button ?? mouseDownEvent?.nativeEvent?.button ?? mouseDownEvent?.data?.originalEvent?.button
@@ -366,6 +424,11 @@ const handleMouseDown_forMiddleClickDrag = (mouseDownEvent) => {
   const c = globalThis.canvas
   const mim = c?.mouseInteractionManager
   if (!mim) return true
+
+  if (isOtherMouseWorkflowActive(mim)) {
+    startStandaloneMiddlePan(mouseDownEvent)
+    return false
+  }
 
   /*
    * --- This section is awkward ---
@@ -654,6 +717,8 @@ const avoidLockViewIncompatibility = () => {
 }
 
 Hooks.on('init', function () {
+  window.removeEventListener('pointerup', handleWindowPointerUp_forStandaloneMiddlePan, true)
+  window.addEventListener('pointerup', handleWindowPointerUp_forStandaloneMiddlePan, true)
   console.log("Initializing Nik's Zoom / Pan Options")
   registerSetting('pan-zoom-mode', {
     name: localizeSetting('pan-zoom-mode', 'name'),
