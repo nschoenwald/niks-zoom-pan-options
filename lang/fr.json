@@ -7,22 +7,22 @@
       },
       "max-zoom-override": {
         "name": "Remplacement du zoom maximal",
-        "hint": "Remplacement de la limite d'échelle de zoom maximale. 3 est la valeur par défaut de Foundry (jusqu'à une mise à l'échelle x3)."
+        "hint": "Remplace la limite maximale d'échelle de zoom (ne peut pas limiter au-delà du zoom initial de la scène) ; une valeur plus élevée permet de voir les détails de plus près. 3 est la valeur par défaut de Foundry (jusqu'à un facteur de x3)."
       },
       "min-zoom-override": {
         "name": "Remplacement du zoom minimum",
-        "hint": "Remplacement de la limite d'échelle de zoom minimale. 1 est la valeur par défaut de Foundry (jusqu'à une mise à l'échelle x1)."
+        "hint": "Remplace la limite minimale d'échelle de zoom (ne peut pas limiter au-delà du zoom initial de la scène) ; une valeur plus basse permet de voir une plus grande partie de la scène à la fois. 1 est la valeur par défaut de Foundry (jusqu'à une mise à l'échelle pixel pour pixel de x1, plus les marges)."
       },
       "pan-zoom-mode": {
         "name": "Mode déplacement/zoom",
-        "hint": "Souris : Fonctionnement standard de Foundry. Zoom avec la molette de la souris. Rotation avec Maj + défilement et Ctrl + défilement.\nPavé tactile : Déplacement avec deux doigts. Zoom en rapprochant deux doigts ou Ctrl + défilement. Rotation avec Maj + défilement et Ctrl + Maj + défilement.\nAlternativement : Déplacement avec deux doigts en glissant ou Maj + défilement. Zoom en rapprochant deux doigts ou Ctrl + défilement. Rotation avec Alt + Maj + défilement et Alt + Ctrl + défilement.",
+        "hint": "Souris : Fonctionnement standard de Foundry. Zoom avec la molette de la souris. Rotation avec Maj + défilement et Ctrl + défilement.\nPavé tactile : Déplacement avec deux doigts. Zoom en rapprochant deux doigts ou Ctrl + défilement. Rotation avec Maj + défilement et Ctrl + Maj + défilement.\nAlternative : Déplacement avec deux doigts en glissant ou Maj + défilement. Zoom en rapprochant deux doigts ou Ctrl + défilement. Rotation avec Alt + Maj + défilement et Alt + Ctrl + défilement.",
         "choice_mouse": "Souris : comportement standard de Foundry",
-        "choice_touchpad": "Pavé tactile : faites glisser, rapprochez, faites pivoter avec Maj ou Ctrl+Maj",
+        "choice_touchpad": "Pavé tactile : glisser, pincer, pivoter avec Maj ou Ctrl+Maj",
         "choice_alternative": "Alternative : peut déplacer avec Shift, faire pivoter en maintenant Alt"
       },
       "mouse-horizontal-scroll": {
         "name": "Comportement du défilement horizontal (mode souris)",
-        "hint": "Détermine la façon dont le défilement horizontal (par ex. molette horizontale de pouce Logitech MX Master ou inclinaison) est géré en mode souris.",
+        "hint": "Détermine la façon dont le défilement horizontal (par ex. molette horizontale de pouce Logitech MX Master ou inclinaison de la molette) est géré en mode souris.",
         "choice_ignore": "Ignorer le défilement horizontal",
         "choice_pan": "Déplacer le canevas horizontalement",
         "choice_zoom": "Zoomer sur le canevas (hérité)"

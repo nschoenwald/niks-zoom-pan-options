@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [14.7.3] - 2026-11-22
+### Changed
+- **French translation**: Reviewed by Kameleau, with corrections to the zoom limit, touchpad and scrolling descriptions. Thank you!
+
 ## [14.7.2] - 2026-11-09
 ### Fixed
 - **Middle-mouse drag while drawing**: Panning with the middle mouse button while drawing a region, drawing, wall or other shape no longer breaks the shape that is being drawn. The canvas pans and you can keep drawing where you left off.

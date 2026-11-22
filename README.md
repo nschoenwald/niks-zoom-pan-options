@@ -27,7 +27,7 @@ Adds touchpad and scroll wheel pan and zoom controls, along with other canvas na
 
 ## Languages
 
-🇬🇧 English · 🇩🇪 Deutsch · 🇫🇷 Français · 🇯🇵 日本語
+🇬🇧 English · 🇩🇪 Deutsch · 🇫🇷 Français (reviewed by Kameleau) · 🇯🇵 日本語
 
 Translations into other languages by native speakers are welcome as an issue or pull request.
 
